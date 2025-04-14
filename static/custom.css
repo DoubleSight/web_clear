@@ -1,0 +1,940 @@
+/* 
+   法律文本清洗系统自定义样式
+   版本: 1.0
+*/
+
+:root {
+    --primary-color: #0d47a1;
+    --secondary-color: #343a40;
+    --success-color: #1b5e20;
+    --info-color: #0069d9;
+    --warning-color: #e65100;
+    --danger-color: #c62828;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --body-bg: #ffffff;
+    --card-bg: #ffffff;
+    --muted-color: #495057;
+    --border-radius: 0.375rem;
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --transition-speed: 0.3s;
+    --form-active-bg: #e8f0fe;
+    --form-hover-bg: #f1f8ff;
+    --form-border: #ced4da;
+    --form-text: #333333;
+}
+
+/* 基础样式 */
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background-color: var(--body-bg);
+    color: var(--dark-color);
+    line-height: 1.6;
+    transition: background-color var(--transition-speed);
+}
+
+.container {
+    max-width: 1200px;
+    padding: 20px;
+}
+
+/* 头部样式 */
+header h1 {
+    font-weight: 700;
+    color: var(--primary-color);
+    transition: color var(--transition-speed);
+}
+
+header .lead {
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    color: var(--dark-color);
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: all var(--transition-speed);
+    background-color: var(--card-bg);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.18);
+    transform: translateY(-3px);
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* 表单样式 */
+.form-label {
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 0.75rem;
+}
+
+.form-text {
+    color: var(--muted-color);
+    font-size: 0.9rem;
+}
+
+/* 按钮样式 */
+.btn {
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all var(--transition-speed);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #062d7e;
+    border-color: #062d7e;
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(13, 71, 161, 0.4);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: #103d13;
+    border-color: #103d13;
+    transform: translateY(-2px);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* 表单控件样式 */
+.form-control, .form-select {
+    border-radius: var(--border-radius);
+    border: 1px solid #90a4ae;
+    padding: 0.5rem 0.75rem;
+    transition: all var(--transition-speed);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.3);
+}
+
+.form-range {
+    height: 1.5rem;
+    padding: 0;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 加载中动画 */
+.loading {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+    animation: fadeIn 0.5s ease-out;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-color: var(--primary-color);
+    border-right-color: transparent;
+}
+
+/* 结果区域样式 */
+.result-area {
+    margin-top: 2.5rem;
+    display: none;
+}
+
+.result-content {
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    color: #212529;
+    border: 1px solid #ced4da;
+    padding: 1rem;
+}
+
+/* NLP结果样式 */
+.nlp-results {
+    margin-top: 2rem;
+    display: none;
+}
+
+.nlp-card {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.nlp-card-header {
+    background-color: var(--info-color);
+    color: white;
+    padding: 0.8rem 1.2rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.nlp-card-header i {
+    margin-right: 8px;
+}
+
+.nlp-card-body {
+    padding: 1.2rem;
+}
+
+.nlp-section {
+    margin-bottom: 1.5rem;
+    padding: 1.2rem;
+    background-color: #f1f3f5;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+}
+
+.nlp-section:last-child {
+    margin-bottom: 0;
+}
+
+.nlp-section h5 {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.nlp-section h5 i {
+    margin-right: 8px;
+    color: var(--secondary-color);
+}
+
+.keyword-badge {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 30px;
+    margin: 0.25rem;
+    font-size: 0.875rem;
+    transition: all var(--transition-speed);
+    font-weight: 500;
+}
+
+.keyword-badge:hover {
+    background-color: #083378;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* 进度条样式 */
+.progress {
+    height: 0.75rem;
+    background-color: #e9ecef;
+    border-radius: 1rem;
+    overflow: hidden;
+    margin: 0.75rem 0;
+}
+
+.progress-bar {
+    transition: width 0.5s ease;
+    color: white;
+}
+
+.progress-bar.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.progress-bar.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+.progress-bar.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+/* 覆盖Bootstrap的badge样式 */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: white;
+}
+
+.badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+    color: white;
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+    color: white;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+    color: white;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: white;
+}
+
+.badge.bg-danger {
+    background-color: var(--danger-color) !important;
+    color: white;
+}
+
+/* 滑块样式 */
+.form-range::-webkit-slider-thumb {
+    background: var(--primary-color);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--primary-color);
+}
+
+/* 模型状态样式 */
+#modelStatusText {
+    font-weight: 500;
+}
+
+.model-status.loaded #modelStatusText {
+    color: var(--success-color);
+}
+
+.model-status.loading #modelStatusText {
+    color: var(--info-color);
+}
+
+.model-status.error #modelStatusText {
+    color: var(--danger-color);
+}
+
+.model-status.not-loaded #modelStatusText {
+    color: var(--warning-color);
+}
+
+/* 文本对比修正 */
+.text-muted {
+    color: #666666 !important;
+}
+
+small.text-muted {
+    font-weight: 500;
+    color: #666666 !important;
+}
+
+/* 确保表单内的小标签文字可见 */
+.form-check-label {
+    color: var(--form-text);
+    font-weight: 500;
+    padding-left: 0.5rem;
+}
+
+/* 错误消息增强显示 */
+.error-message {
+    color: var(--danger-color);
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+/* 确保动画不会导致闪烁 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+/* 上传图标样式 */
+.upload-icon {
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+/* 阈值刻度样式 */
+.threshold-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.threshold-scale .badge {
+    width: auto;
+    padding: 0.4rem 0.7rem;
+    font-weight: 500;
+}
+
+/* 页脚样式 */
+.footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+    
+    .result-content {
+        max-height: 300px;
+        font-size: 0.85rem;
+    }
+    
+    .keyword-badge {
+        padding: 0.2rem 0.6rem;
+    }
+    
+    /* 小屏幕下压缩间距 */
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* 模型加载状态进度条 */
+#modelLoadingBar {
+    transition: width 1s ease-in-out;
+}
+
+/* 页面分隔线 */
+hr {
+    opacity: 0.15;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+    border: 0;
+}
+
+/* 上下布局样式优化 */
+.result-area, .nlp-results {
+    width: 100%;
+    margin-top: 2rem;
+}
+
+/* 结果部分容器 */
+.result-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* 模型状态样式 */
+.model-status {
+    transition: all var(--transition-speed);
+}
+
+.model-loading-indicator {
+    animation: pulse 1.5s infinite;
+}
+
+.model-status.loaded {
+    border-left: 4px solid var(--success-color);
+}
+
+.model-status.loading {
+    border-left: 4px solid var(--info-color);
+}
+
+.model-status.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.model-status.not-loaded {
+    border-left: 4px solid var(--secondary-color);
+}
+
+/* 表单控件优化样式 - 确保在白色背景下可见 */
+.form-check {
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed);
+    margin-bottom: 0.25rem;
+    border: 1px solid transparent;
+}
+
+.form-check:hover {
+    background-color: var(--form-hover-bg);
+    border-color: var(--form-border);
+}
+
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.25em;
+    border: 2px solid var(--secondary-color);
+    background-color: var(--body-bg);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.15rem rgba(13, 71, 161, 0.25);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 71, 161, 0.25);
+    border-color: var(--primary-color);
+}
+
+.form-check-label {
+    color: var(--form-text);
+    font-weight: 500;
+    padding-left: 0.5rem;
+}
+
+/* 单选按钮激活状态 */
+.form-check-input[type="radio"]:checked + .form-check-label,
+.form-check-input[type="checkbox"]:checked + .form-check-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.form-check-input[type="radio"]:checked ~ .form-check-label i,
+.form-check-input[type="checkbox"]:checked ~ .form-check-label i {
+    color: var(--primary-color);
+}
+
+/* 处理模式选项样式增强 */
+.form-check.mx-3 {
+    padding: 0.8rem 1.5rem;
+    margin: 0.5rem;
+    background-color: var(--light-color);
+    border: 2px solid var(--form-border);
+    border-radius: 30px;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    min-width: 160px;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.form-check.mx-3:hover {
+    background-color: var(--form-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.form-check.mx-3 .form-check-input {
+    margin-top: 0;
+    margin-right: 10px;
+    position: relative;
+    flex-shrink: 0;
+    transform: scale(1.2);
+}
+
+.form-check.mx-3 .form-check-label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.form-check.mx-3 .form-check-input:checked ~ .form-check-label {
+    color: var(--primary-color);
+}
+
+.form-check.mx-3 .form-check-input:checked + .form-check-label i {
+    color: var(--primary-color);
+}
+
+/* NLP开关样式优化 */
+.form-switch {
+    padding: 1rem 1.5rem;
+    margin: 0.75rem auto;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 2px solid #e0e0e0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    min-width: 300px;
+    position: relative;
+}
+
+.form-switch:hover {
+    border-color: var(--primary-color);
+    background-color: var(--form-hover-bg);
+    transform: translateY(-1px);
+}
+
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    margin-right: 0.75em;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0, 0, 0, 0.25)'/%3e%3c/svg%3e");
+    border: 1.5px solid var(--secondary-color);
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    box-shadow: 0 0 0 0.2rem rgba(13, 71, 161, 0.25);
+}
+
+.form-switch .form-check-label {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+/* NLP分析类型选项样式 */
+#nlpOptions .form-check {
+    padding: 0.8rem 1.5rem;
+    margin: 0.5rem;
+    background-color: #f1f3f5;
+    border: 2px solid #dee2e6;
+    border-radius: 30px;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    min-width: 140px;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#nlpOptions .form-check:hover {
+    background-color: var(--form-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+#nlpOptions .form-check-input {
+    margin-top: 0;
+    margin-right: 10px;
+    position: relative;
+    flex-shrink: 0;
+    transform: scale(1.2);
+}
+
+#nlpOptions .form-check-label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+#nlpOptions .form-check-input:checked ~ .form-check-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* TF-IDF 滑条样式优化 */
+#tfIdfSettings {
+    padding: 1.2rem;
+    border-radius: var(--border-radius);
+    background-color: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+#tfIdfSettings:hover {
+    border-color: var(--primary-color);
+    background-color: var(--form-hover-bg);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.form-range {
+    height: 2rem;
+    padding: 0;
+    background-color: transparent;
+    margin: 1rem 0;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: var(--primary-color);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    margin-top: -9px;
+    border: 2px solid #fff;
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--primary-color);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border: 2px solid #fff;
+}
+
+.form-range::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(to right, #9ecbff, var(--primary-color));
+    border-radius: 10px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-range::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(to right, #9ecbff, var(--primary-color));
+    border-radius: 10px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 阈值标签样式优化 */
+#thresholdValue {
+    font-weight: 600;
+    background-color: var(--primary-color);
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
+}
+
+/* 增强小提示文本可见性 */
+.d-flex.justify-content-between small {
+    padding: 0.2rem 0.5rem;
+    background-color: #f1f3f5;
+    border-radius: 4px;
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.85rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #dee2e6;
+}
+
+/* 情感分析样式 */
+.sentiment-result {
+    padding: 0.5rem;
+}
+
+.sentiment-emoji {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.5s ease;
+}
+
+.sentiment-emoji i {
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+.sentiment-emoji.positive i {
+    color: var(--success-color);
+}
+
+.sentiment-emoji.negative i {
+    color: var(--danger-color);
+}
+
+.sentiment-emoji.neutral i {
+    color: var(--warning-color);
+}
+
+.sentiment-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.sentiment-label.positive {
+    color: var(--success-color);
+}
+
+.sentiment-label.negative {
+    color: var(--danger-color);
+}
+
+.sentiment-score {
+    font-size: 1rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.sentiment-score.positive {
+    background-color: var(--success-color);
+}
+
+.sentiment-score.negative {
+    background-color: var(--danger-color);
+}
+
+.sentiment-progress {
+    height: 0.75rem;
+    border-radius: 1rem;
+    max-width: 80%;
+    margin: 1rem auto;
+    background-color: #eaeaea;
+    overflow: hidden;
+}
+
+/* 情感仪表盘 */
+.sentiment-gauge-container {
+    margin: 1.5rem auto;
+    max-width: 200px;
+}
+
+.sentiment-gauge {
+    position: relative;
+    width: 180px;
+    height: 90px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.sentiment-gauge-bg {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    top: 0;
+    display: flex;
+}
+
+.sentiment-gauge-scale {
+    flex: 1;
+    height: 100%;
+}
+
+.sentiment-gauge-scale.negative {
+    background: linear-gradient(90deg, #ff4136 0%, #ff851b 100%);
+}
+
+.sentiment-gauge-scale.neutral {
+    background: linear-gradient(90deg, #ff851b 0%, #ffdc00 100%);
+}
+
+.sentiment-gauge-scale.positive {
+    background: linear-gradient(90deg, #ffdc00 0%, #2ecc40 100%);
+}
+
+.sentiment-gauge-needle {
+    position: absolute;
+    width: 4px;
+    height: 70px;
+    background-color: #333;
+    bottom: 0;
+    left: 50%;
+    transform-origin: bottom center;
+    transform: rotate(0deg) translateX(-50%);
+    z-index: 10;
+    transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sentiment-gauge-center {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #333;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+}
+
+.sentiment-gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.sentiment-explanation {
+    color: var(--muted-color);
+    font-style: italic;
+}
+
+/* 情感分析结果过渡动画 */
+@keyframes pulse-sentiment {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.sentiment-score, .sentiment-label {
+    animation: pulse-sentiment 0.5s 1;
+} 

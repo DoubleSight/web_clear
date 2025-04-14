@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法律文本清洗系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+</head>
+<body>
+    <div class="container py-4">
+        <!-- 页面标题区 -->
+        <header class="text-center mb-5">
+            <div class="mx-auto" style="max-width: 700px;">
+                <!-- 添加第一张图片到标题区域 -->
+                <div class="text-center mb-3">
+                    <img src="{{ url_for('static', filename='t2.png') }}" alt="法律文本清洗系统标志" class="img-fluid" style="max-height: 150px;">
+                </div>
+                <h1 class="display-5 fw-bold my-4"><i class="bi bi-file-earmark-text me-2"></i>法律文本清洗系统</h1>
+                <p class="lead">通过格式清洗和语义净化优化法律文本，加上 NLP 智能分析</p>
+                <hr class="my-4 mx-auto" style="width: 50%;">
+            </div>
+        </header>
+
+        <!-- 主内容区 - 上下布局 -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- 上部：上传和设置 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-upload me-2"></i>上传文件</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm" method="post" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- 文件上传 -->
+                                    <div class="mb-4 text-center">
+                                        <label for="file" class="form-label">选择文件 (支持 .txt, .doc, .docx)</label>
+                                        <input type="file" class="form-control" id="file" name="file" accept=".txt,.doc,.docx">
+                                    </div>
+                                    
+                                    <!-- 处理模式 -->
+                                    <div class="mb-4">
+                                        <p class="form-label mb-2 text-center">处理模式</p>
+                                        <div class="d-flex justify-content-center flex-wrap">
+                                            <div class="form-check mx-3 mb-2">
+                                                <input class="form-check-input" type="radio" name="processMode" id="fullProcess" value="full" checked>
+                                                <label class="form-check-label" for="fullProcess">
+                                                    <i class="bi bi-check-all me-1"></i>完整处理
+                                                </label>
+                                            </div>
+                                            <div class="form-check mx-3 mb-2">
+                                                <input class="form-check-input" type="radio" name="processMode" id="formatOnly" value="format">
+                                                <label class="form-check-label" for="formatOnly">
+                                                    <i class="bi bi-text-paragraph me-1"></i>仅格式清洗
+                                                </label>
+                                            </div>
+                                            <div class="form-check mx-3 mb-2">
+                                                <input class="form-check-input" type="radio" name="processMode" id="semanticOnly" value="semantic">
+                                                <label class="form-check-label" for="semanticOnly">
+                                                    <i class="bi bi-braces-asterisk me-1"></i>仅语义净化
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <!-- TF-IDF 阈值设置 -->
+                                    <div id="tfIdfSettings" class="mb-4 mx-auto" style="max-width: 450px;">
+                                        <label for="tfIdfThreshold" class="form-label text-center d-block">TF-IDF 阈值 <span id="thresholdValue" class="badge bg-primary">0.1</span></label>
+                                        <input type="range" class="form-range" min="0.05" max="0.5" step="0.05" value="0.1" id="tfIdfThreshold" name="tfIdfThreshold">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">保留更多词</small>
+                                            <small class="text-muted">只保留关键词</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- NLP 处理选项 -->
+                                    <div class="mb-4 mx-auto" style="max-width: 450px;">
+                                        <div class="form-check form-switch d-flex align-items-center justify-content-center">
+                                            <input class="form-check-input me-2" type="checkbox" id="useNlp" name="useNlp">
+                                            <label class="form-check-label" for="useNlp">使用 NLP 高级分析</label>
+                                            <span id="nlpStatusLabel" class="ms-2">
+                                                <span class="badge bg-info">正在检查模型状态...</span>
+                                            </span>
+                                        </div>
+                                        <div id="nlpOptions" class="mt-3 text-center" style="display: none;">
+                                            <p class="form-label mb-2">NLP 分析类型</p>
+                                            <div class="d-flex justify-content-center flex-wrap">
+                                                <div class="form-check mx-3 mb-2">
+                                                    <input class="form-check-input" type="radio" name="nlpProcessType" id="allNlp" value="all" checked>
+                                                    <label class="form-check-label" for="allNlp">
+                                                        <i class="bi bi-stars me-1"></i>全部
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mx-3 mb-2">
+                                                    <input class="form-check-input" type="radio" name="nlpProcessType" id="summarizeOnly" value="summarize">
+                                                    <label class="form-check-label" for="summarizeOnly">
+                                                        <i class="bi bi-card-text me-1"></i>仅摘要
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mx-3 mb-2">
+                                                    <input class="form-check-input" type="radio" name="nlpProcessType" id="keywordsOnly" value="keywords">
+                                                    <label class="form-check-label" for="keywordsOnly">
+                                                        <i class="bi bi-hash me-1"></i>仅关键词
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mx-3 mb-2">
+                                                    <input class="form-check-input" type="radio" name="nlpProcessType" id="sentimentOnly" value="sentiment">
+                                                    <label class="form-check-label" for="sentimentOnly">
+                                                        <i class="bi bi-emoji-smile me-1"></i>仅情感分析
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 提交按钮 -->
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary px-5 py-2">
+                                    <i class="bi bi-lightning-charge me-2"></i>开始处理
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 模型加载状态 -->
+                <div class="model-status card mb-4 shadow-sm">
+                    <div class="card-header bg-secondary text-white text-center">
+                        <h3 class="h6 mb-0"><i class="bi bi-info-circle me-2"></i>模型状态信息</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-2">NLP 模型加载状态：<span id="modelStatusText">正在检查...</span></p>
+                        <div class="progress mx-auto" style="max-width: 80%;">
+                            <div id="modelLoadingBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 0%"></div>
+                        </div>
+                        <small class="mt-2 d-block">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>首次使用时需要下载约 2GB 的模型文件
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- 加载中显示 -->
+                <div class="loading mt-4 text-center" style="display: none;">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                    <p class="mt-2">正在处理文件，请耐心等待...</p>
+                    <div class="progress mt-2 mx-auto" style="max-width: 80%;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <!-- 错误信息显示 -->
+                <div class="error-message alert mt-4 mx-auto" style="max-width: 90%; display: none;"></div>
+                
+                <!-- 下部：结果显示 -->
+                <div class="result-area" style="display: none;">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h5 mb-0"><i class="bi bi-check-circle me-2"></i>处理结果</h2>
+                                <button onclick="downloadResult()" class="btn btn-sm btn-light">
+                                    <i class="bi bi-download me-1"></i>下载
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-center" id="processInfo">完整处理（格式清洗 + 语义净化）</p>
+                            <div class="result-content p-3 border rounded">
+                                <pre id="resultContent" class="m-0"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NLP 分析结果 -->
+                <div class="nlp-results" style="display: none;">
+                    <div class="row">
+                        <!-- 摘要 -->
+                        <div class="col-md-12">
+                            <div id="summaryArea" class="card shadow-sm mb-4" style="display: none;">
+                                <div class="card-header bg-info text-white text-center">
+                                    <h3 class="h5 mb-0"><i class="bi bi-card-text me-2"></i>文本摘要</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p id="summaryContent" class="mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 关键词 -->
+                        <div class="col-md-6">
+                            <div id="keywordsArea" class="card shadow-sm mb-4" style="display: none;">
+                                <div class="card-header bg-primary text-white text-center">
+                                    <h3 class="h5 mb-0"><i class="bi bi-hash me-2"></i>关键词</h3>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div id="keywordsContent" class="d-flex flex-wrap justify-content-center gap-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 情感分析 -->
+                        <div class="col-md-6">
+                            <div id="sentimentArea" class="card shadow-sm mb-4" style="display: none;">
+                                <div class="card-header bg-secondary text-white text-center">
+                                    <h3 class="h5 mb-0"><i class="bi bi-heart me-2"></i>情感分析</h3>
+                                </div>
+                                <div class="card-body">
+                                    <!-- 增强情感分析展示 -->
+                                    <div class="sentiment-result">
+                                        <!-- 情感表情图标 -->
+                                        <div class="text-center mb-3">
+                                            <div id="sentimentEmoji" class="sentiment-emoji">
+                                                <i class="bi bi-emoji-neutral"></i>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 情感标签和分数 -->
+                                        <div class="d-flex align-items-center justify-content-center mb-3">
+                                            <span id="sentimentLabel" class="me-2 sentiment-label"></span>
+                                            <span id="sentimentScore" class="badge sentiment-score"></span>
+                                        </div>
+                                        
+                                        <!-- 情感强度条 -->
+                                        <div class="progress sentiment-progress mx-auto mb-3">
+                                            <div id="sentimentBar" class="progress-bar" style="width: 0%"></div>
+                                        </div>
+                                        
+                                        <!-- 情感仪表盘 -->
+                                        <div class="sentiment-gauge-container">
+                                            <div class="sentiment-gauge">
+                                                <div class="sentiment-gauge-bg">
+                                                    <div class="sentiment-gauge-scale negative"></div>
+                                                    <div class="sentiment-gauge-scale neutral"></div>
+                                                    <div class="sentiment-gauge-scale positive"></div>
+                                                </div>
+                                                <div id="sentimentNeedle" class="sentiment-gauge-needle" style="transform: rotate(0deg)"></div>
+                                                <div class="sentiment-gauge-center"></div>
+                                            </div>
+                                            <div class="sentiment-gauge-labels">
+                                                <span>消极</span>
+                                                <span>中性</span>
+                                                <span>积极</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 情感分析解释 -->
+                                        <div class="sentiment-explanation mt-3">
+                                            <p id="sentimentExplanation" class="text-center mb-0 small"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 处理选项部分 -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-cogs"></i> 处理选项</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="processingMode">处理模式:</label>
+                                    <select class="form-control" id="processingMode" name="processingMode">
+                                        <option value="format">仅格式清洗</option>
+                                        <option value="semantic">格式清洗 + 语义净化</option>
+                                        <option value="structure">完整三级处理（包含结构重组）</option>
+                                        <option value="full" selected>完整处理 + NLP分析</option>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        格式清洗：去除噪声符号，规范标点，修正格式<br>
+                                        语义净化：过滤无用内容，保留有价值信息<br>
+                                        结构重组：修复断句，标记元素，生成结构化XML
+                                    </small>
+                                </div>
+                                <div class="form-row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="tfidfThreshold">语义净化阈值:</label>
+                                            <input type="range" class="form-control-range" id="tfidfThreshold" name="tfidfThreshold" 
+                                                  min="0.1" max="0.9" step="0.05" value="0.35">
+                                            <div class="d-flex justify-content-between">
+                                                <small>保留更多 (0.1)</small>
+                                                <small id="tfidfValue">0.35</small>
+                                                <small>仅关键 (0.9)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="exportFormat">导出格式:</label>
+                                            <select class="form-control" id="exportFormat" name="exportFormat">
+                                                <option value="txt">纯文本 (TXT)</option>
+                                                <option value="json">JSON (带统计)</option>
+                                                <option value="xml">结构化 (XML)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 添加结构化输出显示部分 -->
+                <div class="row mt-4" id="structuredOutputContainer" style="display: none;">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-sitemap"></i> 结构化分析结果</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="nav nav-tabs" id="structureTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="marked-tab" data-toggle="tab" href="#markedText" role="tab" aria-controls="markedText" aria-selected="true">标记文本</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="elements-tab" data-toggle="tab" href="#elements" role="tab" aria-controls="elements" aria-selected="false">元素提取</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="actions-tab" data-toggle="tab" href="#actions" role="tab" aria-controls="actions" aria-selected="false">行动链</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="xml-tab" data-toggle="tab" href="#xmlOutput" role="tab" aria-controls="xmlOutput" aria-selected="false">XML输出</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content py-3" id="structureTabContent">
+                                    <div class="tab-pane fade show active" id="markedText" role="tabpanel" aria-labelledby="marked-tab">
+                                        <pre class="p-3 border rounded bg-light" id="markedTextContent" style="white-space: pre-wrap;"></pre>
+                                    </div>
+                                    <div class="tab-pane fade" id="elements" role="tabpanel" aria-labelledby="elements-tab">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-info text-white">时间</div>
+                                                    <div class="card-body p-2">
+                                                        <ul id="timeElements" class="list-group list-group-flush"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-info text-white">地点</div>
+                                                    <div class="card-body p-2">
+                                                        <ul id="locationElements" class="list-group list-group-flush"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-info text-white">人物</div>
+                                                    <div class="card-body p-2">
+                                                        <ul id="personElements" class="list-group list-group-flush"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-info text-white">行动</div>
+                                                    <div class="card-body p-2">
+                                                        <ul id="actionElements" class="list-group list-group-flush"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-info text-white">工具/对象</div>
+                                                    <div class="card-body p-2">
+                                                        <ul id="toolElements" class="list-group list-group-flush"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="actions" role="tabpanel" aria-labelledby="actions-tab">
+                                        <div id="actionChains"></div>
+                                    </div>
+                                    <div class="tab-pane fade" id="xmlOutput" role="tabpanel" aria-labelledby="xml-tab">
+                                        <pre class="p-3 border rounded bg-light" id="xmlOutputContent" style="white-space: pre-wrap;"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 显示处理统计信息部分 -->
+                <div class="row mt-3" id="statsContainer" style="display: none;">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> 处理统计</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="card mb-3">
+                                            <div class="card-header">格式清洗统计</div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush" id="formatStats"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card mb-3">
+                                            <div class="card-header">语义净化统计</div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush" id="semanticStats"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card mb-3">
+                                            <div class="card-header">结构重组统计</div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush" id="structureStats"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加第二张图片在页脚之前 -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-8 text-center">
+                <img src="{{ url_for('static', filename='syykq0419lz.png') }}" alt="法律文本处理流程图" class="img-fluid mb-4">
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-3 mb-4 text-center">
+            <hr class="my-4 mx-auto" style="width: 50%;">
+            <p><small class="text-secondary">法律文本清洗系统 &copy; 2023</small></p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html> 

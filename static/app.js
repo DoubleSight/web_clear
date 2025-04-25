@@ -288,6 +288,22 @@ function displayNlpResults(results) {
     keywordsArea.style.display = 'none';
     sentimentArea.style.display = 'none';
     
+    // 显示轻量级模式提示
+    if (results.lightweight_mode) {
+        const lightweightNotice = document.createElement('div');
+        lightweightNotice.className = 'alert alert-info mb-3';
+        lightweightNotice.innerHTML = '<i class="bi bi-info-circle me-2"></i>正在使用轻量级模式，结果为近似值。更精确的结果需要加载完整NLP模型。';
+        nlpResults.prepend(lightweightNotice);
+    }
+    
+    // 如果有错误信息，显示错误
+    if (results.error) {
+        const errorNotice = document.createElement('div');
+        errorNotice.className = 'alert alert-warning mb-3';
+        errorNotice.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${results.error}`;
+        nlpResults.prepend(errorNotice);
+    }
+    
     // 显示摘要
     if (results.summary) {
         document.getElementById('summaryContent').textContent = results.summary;

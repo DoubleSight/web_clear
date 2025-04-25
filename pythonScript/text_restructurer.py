@@ -160,20 +160,23 @@ class TextRestructurer:
                 best_prediction = None
                 best_score = 0
                 
-                for prediction_set in predictions:
-                    # 可能会有多个[MASK]的情况，所以结果可能是列表的列表
-                    if isinstance(prediction_set, list):
-                        for p in prediction_set:
-                            if p['score'] > best_score:
-                                best_score = p['score']
-                                best_prediction = p['sequence']
-                    else:
-                        if prediction_set['score'] > best_score:
-                            best_score = prediction_set['score']
-                            best_prediction = prediction_set['sequence']
+                if predictions is not None:
+                    for prediction_set in predictions:
+                        # 可能会有多个[MASK]的情况，所以结果可能是列表的列表
+                        if isinstance(prediction_set, list):
+                            for p in prediction_set:
+                                if isinstance(p, dict) and 'score' in p and p['score'] > best_score:
+                                    best_score = p['score']
+                                    if 'sequence' in p:
+                                        best_prediction = p['sequence']
+                        elif isinstance(prediction_set, dict):
+                            if 'score' in prediction_set and prediction_set['score'] > best_score:
+                                best_score = prediction_set['score']
+                                if 'sequence' in prediction_set:
+                                    best_prediction = prediction_set['sequence']
                 
                 # 检查预测分数是否超过阈值
-                if best_score >= self.bert_threshold:
+                if best_prediction is not None and best_score >= self.bert_threshold:
                     # 提取填充的文本部分
                     filled_text = best_prediction
                     
@@ -191,6 +194,7 @@ class TextRestructurer:
     def mark_text_elements(self, text):
         """
         标记文本中的重要元素（时间、地点、人物、行为等）
+        改进：一次性查找所有匹配项，然后统一标记，避免重复标记。
         
         Args:
             text (str): 要处理的文本
@@ -207,34 +211,74 @@ class TextRestructurer:
             'tool': [],
             'method': []
         }
-        
-        # 标记并提取每种元素
+        all_matches_to_apply = [] # Store (start, end, element_type, element_text)
+
+        # 1. 查找所有类型的匹配项及其原始位置
         for element_type, patterns in self.element_patterns.items():
             for pattern in patterns:
-                matches = re.finditer(pattern, marked_text)
-                
-                # 创建偏移量追踪器，因为每次插入标记后文本长度会变化
-                offset = 0
-                
-                for match in matches:
-                    element_text = match.group(1) if element_type != 'location' and match.lastindex and match.lastindex > 0 else match.group(0)
-                    start_pos = match.start() + offset
-                    end_pos = match.end() + offset
-                    
-                    # 生成标记文本
-                    element_tag = f"[{element_type.upper()}]"
-                    element_end_tag = f"[/{element_type.upper()}]"
-                    
-                    # 将原始文本中的匹配部分替换为带标记的版本
-                    marked_text = marked_text[:start_pos] + f"{element_tag}{element_text}{element_end_tag}" + marked_text[end_pos:]
-                    
-                    # 更新偏移量
-                    offset += len(element_tag) + len(element_end_tag)
-                    
-                    # 保存提取到的元素
-                    if element_text not in extracted_elements[element_type]:
-                        extracted_elements[element_type].append(element_text)
+                try:
+                    # 在原始文本上查找，避免干扰
+                    for match in re.finditer(pattern, text, re.IGNORECASE):
+                        start, end = match.span()
+                        # 尝试获取捕获组，否则获取整个匹配
+                        element_text = match.group(1) if match.lastindex and match.lastindex > 0 else match.group(0)
+                        # 过滤掉空或过短的匹配（可选）
+                        if element_text and len(element_text.strip()) > 0:
+                            all_matches_to_apply.append((start, end, element_type, element_text))
+                except re.error as e:
+                    logger.error(f"Regex error for {element_type} pattern '{pattern}': {e}")
+
+        # 2. 排序并去重/处理重叠（按起始位置排序，如果起始位置相同，选择较长的匹配）
+        # 基本的重叠处理：如果一个匹配完全包含在另一个匹配内，保留较长的。
+        # 更复杂的重叠（部分重叠）可能需要更精细的逻辑，这里先处理包含关系。
+        if not all_matches_to_apply:
+            return text, extracted_elements
+
+        all_matches_to_apply.sort(key=lambda x: (x[0], -(x[1] - x[0]))) # Sort by start, then by length descending
+
+        final_matches = []
+        last_end = -1
+        for i, (start, end, etype, etext) in enumerate(all_matches_to_apply):
+            # 简单的去包含和精确重叠处理
+            # 如果当前匹配的结束位置 <= 上一个接受的匹配的结束位置，说明被包含或重叠，跳过
+            if start >= last_end: 
+                final_matches.append((start, end, etype, etext))
+                last_end = end
+            # （可选）更复杂的重叠判断逻辑可以在这里添加
+
+        # 3. 从后往前插入标记，避免偏移量计算复杂化
+        marked_text_builder = list(text) # 使用列表方便插入
+        offset = 0 # 相对原始文本的偏移量 - 在从后往前插入时不需要
+        processed_indices = set() # 防止对同一文本区域重复标记
+
+        for start, end, element_type, element_text in reversed(final_matches):
+             # 检查是否已经处理过这个范围（或部分重叠）- 简单检查
+             is_processed = False
+             for i in range(start, end):
+                 if i in processed_indices:
+                     is_processed = True
+                     break
+             if is_processed:
+                 logger.debug(f"Skipping overlapping/processed tag for {element_type} at {start}-{end}")
+                 continue
+            
+             element_tag = f"[{element_type.upper()}]"
+             element_end_tag = f"[/{element_type.upper()}]"
+             
+             # 执行插入
+             marked_text_builder.insert(end, element_end_tag)
+             marked_text_builder.insert(start, element_tag)
+             
+             # 标记已处理的原始索引
+             for i in range(start, end):
+                  processed_indices.add(i)
+
+             # 保存提取到的元素 (去重)
+             element_text_clean = element_text.strip()
+             if element_text_clean not in extracted_elements[element_type]:
+                 extracted_elements[element_type].append(element_text_clean)
         
+        marked_text = "".join(marked_text_builder)
         return marked_text, extracted_elements
     
     def detect_action_chains(self, text, extracted_elements=None):

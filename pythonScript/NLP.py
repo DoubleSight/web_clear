@@ -16,8 +16,10 @@ import logging
 from typing import Dict, Optional, Union
 from transformers import pipeline
 
-# 创建模型缓存目录
-MODELS_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models_cache')
+# 获取项目根目录 (NLP.py 文件所在目录的上一级)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# 定义模型缓存目录为项目根目录下的 models_cache
+MODELS_CACHE_DIR = os.path.join(PROJECT_ROOT, 'models_cache')
 MODELS_INFO_FILE = os.path.join(MODELS_CACHE_DIR, 'models_info.json')
 os.makedirs(MODELS_CACHE_DIR, exist_ok=True)
 
@@ -33,6 +35,12 @@ loading_error = None
 
 # 详细日志记录
 LOG_FILE = os.path.join(MODELS_CACHE_DIR, "nlp_log.txt")
+
+# NLP模型加载控制
+USE_LIGHTWEIGHT_MODE = True  # 默认使用轻量级模式，不加载大型NLP模型
+NLP_REQUEST_COUNT = 0  # 跟踪NLP请求次数
+NLP_REQUEST_THRESHOLD = 3  # 达到该阈值后才考虑加载模型
+NLP_INITIALIZED = False  # 跟踪NLP模型是否已初始化
 
 # 配置日志
 logging.basicConfig(
@@ -109,10 +117,12 @@ def initialize_nlp_models():
     """初始化NLP模型，让pipeline处理下载和缓存"""
     global summarizer, keyword_extractor, sentiment_analyzer
     global models_loading, models_loaded, loading_error
+    global NLP_INITIALIZED
     
     # 如果模型已加载，直接返回
     if models_loaded and (summarizer is not None) and (keyword_extractor is not None) and (sentiment_analyzer is not None):
         log_message("模型已加载，跳过初始化")
+        NLP_INITIALIZED = True
         return True
     
     # 如果正在加载中，直接返回
@@ -128,6 +138,7 @@ def initialize_nlp_models():
     def load_models_thread():
         global summarizer, keyword_extractor, sentiment_analyzer
         global models_loading, models_loaded, loading_error
+        global NLP_INITIALIZED
         
         try:
             start_time = time.time()
@@ -150,34 +161,24 @@ def initialize_nlp_models():
             log_message("情感分析模型加载成功")
             
             # 更新模型状态
+            log_message("模型加载完成！")
+            models_loading = False
             models_loaded = True
             loading_error = None
-            end_time = time.time()
-            log_message("所有NLP模型加载完成! 总耗时: {:.2f} 秒".format(end_time - start_time))
-
+            NLP_INITIALIZED = True
+            save_model_info() # Save state indicating loading has completed
         except Exception as e:
-            # 记录加载错误
-            error_trace = traceback.format_exc()
-            loading_error = "{}\\nTraceback:\n{}".format(str(e), error_trace)
-            log_message("模型加载失败: {}".format(loading_error))
-            
-            # 重置模型变量
-            summarizer = None
-            keyword_extractor = None
-            sentiment_analyzer = None
-            models_loaded = False
-        finally:
-            # 无论是否成功，都结束加载状态
+            log_message(f"模型加载失败: {str(e)}")
             models_loading = False
-            save_model_info() # Save final state (loaded or error)
+            models_loaded = False
+            loading_error = str(e)
+            NLP_INITIALIZED = False
+            save_model_info() # Save state indicating loading has failed
     
-    # 启动后台线程加载模型
-    thread = threading.Thread(target=load_models_thread)
-    thread.daemon = True
-    thread.start()
-    log_message("已启动后台线程加载模型")
+    # 启动加载线程
+    threading.Thread(target=load_models_thread, daemon=True).start()
     
-    return False # Return False because loading happens in background
+    return NLP_INITIALIZED
 
 def get_model_status():
     """获取模型加载状态"""
@@ -200,13 +201,45 @@ def get_model_status():
     
     return status
 
-def perform_nlp_analysis(text, nlp_process_type='all'):
+def is_nlp_processing_needed(text, nlp_options=None):
+    """
+    检测文本是否需要NLP处理
+    
+    Args:
+        text (str): 要分析的文本
+        nlp_options (dict): NLP处理选项
+        
+    Returns:
+        bool: 是否需要NLP处理
+    """
+    global NLP_REQUEST_COUNT
+    
+    # 如果没有提供文本，不需要处理
+    if not text or len(text.strip()) < 100:  # 文本太短也不需要
+        return False
+    
+    # 如果没有指定任何NLP选项，不需要处理
+    if nlp_options is None or not any(nlp_options.values()):
+        return False
+    
+    # 增加请求计数
+    NLP_REQUEST_COUNT += 1
+    
+    # 如果请求次数达到阈值，可以考虑加载模型
+    if NLP_REQUEST_COUNT >= NLP_REQUEST_THRESHOLD:
+        return True
+        
+    # 默认不加载，通知用户
+    return False
+
+def perform_nlp_analysis(text, nlp_process_type='all', nlp_options=None):
     """
     执行NLP分析
     
     Args:
         text (str): 要分析的文本
         nlp_process_type (str): 分析类型，可选值为 'all', 'summarize', 'keywords', 'sentiment'
+        nlp_options (dict): NLP处理选项，如 {'summarize': True, 'keywords': True, 'sentiment': False}
         
     Returns:
         dict: 分析结果
@@ -219,6 +252,12 @@ def perform_nlp_analysis(text, nlp_process_type='all'):
         return {
             "error": "输入文本为空，无法进行NLP分析"
         }
+    
+    # 检查是否需要进行NLP处理
+    if USE_LIGHTWEIGHT_MODE and not is_nlp_processing_needed(text, nlp_options):
+        log_message("使用轻量级模式，不加载大型NLP模型")
+        # 返回模拟结果
+        return generate_mock_nlp_results(text, nlp_options)
     
     # 检查模型是否已加载且可用
     current_status = get_model_status()
@@ -347,6 +386,67 @@ def reset_model_state():
     log_message("模型状态已重置")
     
     return {"status": "已重置模型状态"}
+
+# 添加一个函数用于生成模拟NLP结果，避免加载大型模型
+def generate_mock_nlp_results(text, nlp_options):
+    """
+    生成模拟的NLP结果，用于轻量级模式
+    
+    Args:
+        text (str): 输入文本
+        nlp_options (dict): NLP处理选项
+        
+    Returns:
+        dict: 模拟的NLP结果
+    """
+    results = {}
+    
+    # 如果文本太长，截断一下方便处理
+    short_text = text[:500]
+    
+    # 生成模拟摘要
+    if nlp_options.get('summarize', False):
+        # 简单地取第一段作为摘要
+        paragraphs = text.split('\n\n')
+        if paragraphs:
+            results['summary'] = paragraphs[0][:150]
+        else:
+            results['summary'] = short_text[:150]
+        log_message("已生成模拟摘要 (轻量级模式)")
+    
+    # 生成模拟关键词
+    if nlp_options.get('keywords', False):
+        # 简单地提取一些较长的词作为关键词
+        words = re.findall(r'[\w\u4e00-\u9fa5]{2,}', short_text)
+        word_freq = {}
+        for word in words:
+            if len(word) >= 2:  # 只考虑至少2个字符的词
+                word_freq[word] = word_freq.get(word, 0) + 1
+        
+        # 取频率最高的几个词
+        keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:8]
+        results['keywords'] = [[word, round(0.5 + freq / 10, 2)] for word, freq in keywords]
+        log_message("已生成模拟关键词 (轻量级模式)")
+    
+    # 生成模拟情感分析
+    if nlp_options.get('sentiment', False):
+        # 基于一些简单规则判断情感
+        negative_words = ['不', '否', '拒绝', '失败', '错误', '问题', '困难', '坏', '差']
+        positive_words = ['好', '优', '成功', '正确', '同意', '批准', '解决', '满意']
+        
+        neg_count = sum(1 for word in negative_words if word in short_text)
+        pos_count = sum(1 for word in positive_words if word in short_text)
+        
+        if neg_count > pos_count:
+            results['sentiment'] = {'label': '负面', 'score': -0.65}
+        elif pos_count > neg_count:
+            results['sentiment'] = {'label': '积极', 'score': 0.65}
+        else:
+            results['sentiment'] = {'label': '中性', 'score': 0}
+        
+        log_message("已生成模拟情感分析 (轻量级模式)")
+    
+    return results
 
 # 程序启动时尝试加载模型 (if run as main script)
 if __name__ == "__main__":
